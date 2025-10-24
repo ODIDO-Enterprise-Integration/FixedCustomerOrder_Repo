@@ -1,0 +1,950 @@
+{
+  "suites": {},
+  "tests": {
+    "Move_1_VISP_BE_Request_Transformation_Subflow:VISP_BE_REQ_XFM_Subflow_Test": {
+      "name": "VISP_BE_REQ_XFM_Subflow_Test",
+      "flowId": "flow:Move_1_VISP_BE_Request_Transformation_Subflow",
+      "flowName": "Move_1_VISP_BE_Request_Transformation_Subflow",
+      "disabled": false,
+      "flowInputs": {
+        "NCRequest": {
+          "body": {
+            "requestId": "REQ-20251021-001",
+            "externalId": "EXT-ORDER-987654321",
+            "description": "New fiber internet and phone bundle order",
+            "relatedParty": [
+              {
+                "role": "customer",
+                "id": "CUST-00123",
+                "name": "John Doe"
+              },
+              {
+                "role": "salesAgent",
+                "id": "AGENT-5566",
+                "name": "Jane Smith"
+              }
+            ],
+            "bssCustomerRelatedParty": [
+              {
+                "personDetails": {
+                  "firstName": "John",
+                  "lastName": "Doe",
+                  "prefix": "Mr.",
+                  "birthDate": "1985-07-15",
+                  "gender": "Male",
+                  "emailAddress": "john.doe@example.com",
+                  "phone": "+1234567890"
+                },
+                "iban": "DE89370400440532013000",
+                "bankAccountName": "John Doe",
+                "usage": "Direct Debit for service payment",
+                "commercialOffer": "FiberPro100",
+                "crmAccountId": "CRM-ACC-998877",
+                "id": "PARTY-778899"
+              },
+              {
+                "personDetails": {
+                  "firstName": "Emily",
+                  "lastName": "Clark",
+                  "prefix": "Ms.",
+                  "birthDate": "1990-04-25",
+                  "gender": "Female",
+                  "emailAddress": "emily.clark@example.com",
+                  "phone": "+1234567891"
+                },
+                "iban": "FR1420041010050500013M02606",
+                "bankAccountName": "Emily Clark",
+                "usage": "Backup billing account",
+                "commercialOffer": "PhoneLineBasic",
+                "crmAccountId": "CRM-ACC-998878",
+                "id": "PARTY-778900"
+              }
+            ],
+            "discountRelatedParty": [
+              {
+                "id": "DISC-2025-OCT",
+                "role": "promotion",
+                "variantCode": "FIBER50-OFF"
+              },
+              {
+                "id": "DISC-LOYALTY",
+                "role": "loyaltyProgram",
+                "variantCode": "LOYALTY10"
+              }
+            ],
+            "summarySentOnDate": {
+              "summarySentOnDate": "2025-10-21"
+            },
+            "serviceOrderItem": [
+              {
+                "id": "SOI-001",
+                "action": "add",
+                "quantity": "1",
+                "service": {
+                  "serviceCharacteristic": [
+                    {
+                      "name": "Bandwidth",
+                      "valueType": "integer",
+                      "value": [
+                        "100",
+                        "200"
+                      ]
+                    },
+                    {
+                      "name": "SpeedUnit",
+                      "valueType": "string",
+                      "value": [
+                        "Mbps",
+                        "Gbps"
+                      ]
+                    }
+                  ],
+                  "place": [
+                    {
+                      "role": "installationAddress",
+                      "id": "LOC-4521",
+                      "alias": "Home Address",
+                      "postcode": "90210",
+                      "houseNumber": "12",
+                      "houseNumberExtension": "A",
+                      "street": "Sunset Blvd",
+                      "city": "Los Angeles",
+                      "country": "USA",
+                      "type": "residential"
+                    },
+                    {
+                      "role": "billingAddress",
+                      "id": "LOC-8899",
+                      "alias": "Billing Address",
+                      "postcode": "90211",
+                      "houseNumber": "34",
+                      "houseNumberExtension": "",
+                      "street": "Melrose Ave",
+                      "city": "Los Angeles",
+                      "country": "USA",
+                      "type": "billing"
+                    }
+                  ],
+                  "serviceSpecification": {
+                    "id": "SPEC-FTTH-100",
+                    "name": "Fiber 100Mbps",
+                    "version": "1.0"
+                  }
+                },
+                "serviceOrderItemRelationship": [
+                  {
+                    "relationshipType": "reliesOn",
+                    "orderItem": {
+                      "itemId": "SOI-DEP-001"
+                    }
+                  },
+                  {
+                    "relationshipType": "complements",
+                    "orderItem": {
+                      "itemId": "SOI-002"
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "SOI-002",
+                "action": "add",
+                "quantity": "1",
+                "service": {
+                  "serviceCharacteristic": [
+                    {
+                      "name": "VoiceLineType",
+                      "valueType": "string",
+                      "value": [
+                        "VOIP",
+                        "Analog"
+                      ]
+                    },
+                    {
+                      "name": "MinutesBundle",
+                      "valueType": "integer",
+                      "value": [
+                        "500",
+                        "1000"
+                      ]
+                    },
+                    {
+                      "name": "MinutesBundle2",
+                      "valueType": "integer",
+                      "value": [
+                        "500",
+                        "1000"
+                      ]
+                    },
+                    {
+                      "name": "notes",
+                      "valueType": "integer",
+                      "value": [
+                        "500",
+                        "1000"
+                      ]
+                    }
+                  ],
+                  "place": [
+                    {
+                      "role": "installationAddress",
+                      "id": "LOC-4521",
+                      "alias": "Home Address",
+                      "postcode": "90210",
+                      "houseNumber": "12",
+                      "houseNumberExtension": "A",
+                      "street": "Sunset Blvd",
+                      "city": "Los Angeles",
+                      "country": "USA",
+                      "type": "residential"
+                    },
+                    {
+                      "role": "billingAddress",
+                      "id": "LOC-8899",
+                      "alias": "Billing Address",
+                      "postcode": "90211",
+                      "houseNumber": "34",
+                      "houseNumberExtension": "",
+                      "street": "Melrose Ave",
+                      "city": "Los Angeles",
+                      "country": "USA",
+                      "type": "billing"
+                    }
+                  ],
+                  "serviceSpecification": {
+                    "id": "SPEC-VOIP-500",
+                    "name": "B2C TMF641 Service",
+                    "version": "2.1"
+                  }
+                },
+                "serviceOrderItemRelationship": [
+                  {
+                    "relationshipType": "dependency",
+                    "orderItem": {
+                      "itemId": "SOI-001"
+                    }
+                  },
+                  {
+                    "relationshipType": "bundledWith",
+                    "orderItem": {
+                      "itemId": "SOI-003"
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        "body": {
+          "requestId": "REQ-20251021-001",
+          "externalId": "EXT-ORDER-987654321",
+          "description": "New fiber internet and phone bundle order",
+          "relatedParty": [
+            {
+              "role": "customer",
+              "id": "CUST-00123",
+              "name": "John Doe"
+            },
+            {
+              "role": "salesAgent",
+              "id": "AGENT-5566",
+              "name": "Jane Smith"
+            }
+          ],
+          "bssCustomerRelatedParty": [
+            {
+              "personDetails": {
+                "firstName": "John",
+                "lastName": "Doe",
+                "prefix": "Mr.",
+                "birthDate": "1985-07-15",
+                "gender": "Male",
+                "emailAddress": "john.doe@example.com",
+                "phone": "+1234567890"
+              },
+              "iban": "DE89370400440532013000",
+              "bankAccountName": "John Doe",
+              "usage": "Direct Debit for service payment",
+              "commercialOffer": "FiberPro100",
+              "crmAccountId": "CRM-ACC-998877",
+              "id": "PARTY-778899"
+            },
+            {
+              "personDetails": {
+                "firstName": "Emily",
+                "lastName": "Clark",
+                "prefix": "Ms.",
+                "birthDate": "1990-04-25",
+                "gender": "Female",
+                "emailAddress": "emily.clark@example.com",
+                "phone": "+1234567891"
+              },
+              "iban": "FR1420041010050500013M02606",
+              "bankAccountName": "Emily Clark",
+              "usage": "Backup billing account",
+              "commercialOffer": "PhoneLineBasic",
+              "crmAccountId": "CRM-ACC-998878",
+              "id": "PARTY-778900"
+            }
+          ],
+          "discountRelatedParty": [
+            {
+              "id": "DISC-2025-OCT",
+              "role": "promotion",
+              "variantCode": "FIBER50-OFF"
+            },
+            {
+              "id": "DISC-LOYALTY",
+              "role": "loyaltyProgram",
+              "variantCode": "LOYALTY10"
+            }
+          ],
+          "summarySentOnDate": {
+            "summarySentOnDate": "2025-10-21"
+          },
+          "serviceOrderItem": [
+            {
+              "id": "SOI-001",
+              "action": "add",
+              "quantity": "1",
+              "service": {
+                "serviceCharacteristic": [
+                  {
+                    "name": "Bandwidth",
+                    "valueType": "integer",
+                    "value": [
+                      "100",
+                      "200"
+                    ]
+                  },
+                  {
+                    "name": "SpeedUnit",
+                    "valueType": "string",
+                    "value": [
+                      "Mbps",
+                      "Gbps"
+                    ]
+                  }
+                ],
+                "place": [
+                  {
+                    "role": "installationAddress",
+                    "id": "LOC-4521",
+                    "alias": "Home Address",
+                    "postcode": "90210",
+                    "houseNumber": "12",
+                    "houseNumberExtension": "A",
+                    "street": "Sunset Blvd",
+                    "city": "Los Angeles",
+                    "country": "USA",
+                    "type": "residential"
+                  },
+                  {
+                    "role": "billingAddress",
+                    "id": "LOC-8899",
+                    "alias": "Billing Address",
+                    "postcode": "90211",
+                    "houseNumber": "34",
+                    "houseNumberExtension": "",
+                    "street": "Melrose Ave",
+                    "city": "Los Angeles",
+                    "country": "USA",
+                    "type": "billing"
+                  }
+                ],
+                "serviceSpecification": {
+                  "id": "SPEC-FTTH-100",
+                  "name": "Fiber 100Mbps",
+                  "version": "1.0"
+                }
+              },
+              "serviceOrderItemRelationship": [
+                {
+                  "relationshipType": "reliesOn",
+                  "orderItem": {
+                    "itemId": "SOI-DEP-001"
+                  }
+                },
+                {
+                  "relationshipType": "complements",
+                  "orderItem": {
+                    "itemId": "SOI-002"
+                  }
+                }
+              ]
+            },
+            {
+              "id": "SOI-002",
+              "action": "add",
+              "quantity": "1",
+              "service": {
+                "serviceCharacteristic": [
+                  {
+                    "name": "VoiceLineType",
+                    "valueType": "string",
+                    "value": [
+                      "VOIP",
+                      "Analog"
+                    ]
+                  },
+                  {
+                    "name": "MinutesBundle",
+                    "valueType": "integer",
+                    "value": [
+                      "500",
+                      "1000"
+                    ]
+                  },
+                  {
+                    "name": "MinutesBundle2",
+                    "valueType": "integer",
+                    "value": [
+                      "500",
+                      "1000"
+                    ]
+                  },
+                  {
+                    "name": "notes",
+                    "valueType": "integer",
+                    "value": [
+                      "500",
+                      "1000"
+                    ]
+                  }
+                ],
+                "place": [
+                  {
+                    "role": "installationAddress",
+                    "id": "LOC-4521",
+                    "alias": "Home Address",
+                    "postcode": "90210",
+                    "houseNumber": "12",
+                    "houseNumberExtension": "A",
+                    "street": "Sunset Blvd",
+                    "city": "Los Angeles",
+                    "country": "USA",
+                    "type": "residential"
+                  },
+                  {
+                    "role": "billingAddress",
+                    "id": "LOC-8899",
+                    "alias": "Billing Address",
+                    "postcode": "90211",
+                    "houseNumber": "34",
+                    "houseNumberExtension": "",
+                    "street": "Melrose Ave",
+                    "city": "Los Angeles",
+                    "country": "USA",
+                    "type": "billing"
+                  }
+                ],
+                "serviceSpecification": {
+                  "id": "SPEC-VOIP-500",
+                  "name": "B2C TMF641 Service",
+                  "version": "2.1"
+                }
+              },
+              "serviceOrderItemRelationship": [
+                {
+                  "relationshipType": "dependency",
+                  "orderItem": {
+                    "itemId": "SOI-001"
+                  }
+                },
+                {
+                  "relationshipType": "bundledWith",
+                  "orderItem": {
+                    "itemId": "SOI-003"
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "flowOutputs": {
+        "type": "ASSERT_ON_OP",
+        "assertions": {
+          "Assertion1": {
+            "name": "Assertion1",
+            "valueAssertion": "$.VISPRequest.memo==\"500\""
+          }
+        }
+      }
+    },
+    "Mapping_Subflow:Mapper_Test": {
+      "name": "Mapper_Test",
+      "flowId": "flow:Mapping_Subflow",
+      "flowName": "Mapping_Subflow",
+      "disabled": false,
+      "flowInputs": {
+        "body": {
+          "requestId": "REQ-20251021-001",
+          "externalId": "EXT-ORDER-987654321",
+          "description": "New fiber internet and phone bundle order",
+          "relatedParty": [
+            {
+              "role": "customer",
+              "id": "CUST-00123",
+              "name": "John Doe"
+            },
+            {
+              "role": "salesAgent",
+              "id": "AGENT-5566",
+              "name": "Jane Smith"
+            }
+          ],
+          "bssCustomerRelatedParty": [
+            {
+              "personDetails": {
+                "firstName": "John",
+                "lastName": "Doe",
+                "prefix": "Mr.",
+                "birthDate": "1985-07-15",
+                "gender": "Male",
+                "emailAddress": "john.doe@example.com",
+                "phone": "+1234567890"
+              },
+              "iban": "DE89370400440532013000",
+              "bankAccountName": "John Doe",
+              "usage": "Direct Debit for service payment",
+              "commercialOffer": "FiberPro100",
+              "crmAccountId": "CRM-ACC-998877",
+              "id": "PARTY-778899"
+            },
+            {
+              "personDetails": {
+                "firstName": "Emily",
+                "lastName": "Clark",
+                "prefix": "Ms.",
+                "birthDate": "1990-04-25",
+                "gender": "Female",
+                "emailAddress": "emily.clark@example.com",
+                "phone": "+1234567891"
+              },
+              "iban": "FR1420041010050500013M02606",
+              "bankAccountName": "Emily Clark",
+              "usage": "Backup billing account",
+              "commercialOffer": "PhoneLineBasic",
+              "crmAccountId": "CRM-ACC-998878",
+              "id": "PARTY-778900"
+            }
+          ],
+          "discountRelatedParty": [
+            {
+              "id": "DISC-2025-OCT",
+              "role": "promotion",
+              "variantCode": "FIBER50-OFF"
+            },
+            {
+              "id": "DISC-LOYALTY",
+              "role": "loyaltyProgram",
+              "variantCode": "LOYALTY10"
+            }
+          ],
+          "summarySentOnDate": {
+            "summarySentOnDate": "2025-10-21"
+          },
+          "serviceOrderItem": [
+            {
+              "id": "SOI-001",
+              "action": "add",
+              "quantity": "1",
+              "service": {
+                "serviceCharacteristic": [
+                  {
+                    "name": "Bandwidth",
+                    "valueType": "integer",
+                    "value": [
+                      "100",
+                      "200"
+                    ]
+                  },
+                  {
+                    "name": "SpeedUnit",
+                    "valueType": "string",
+                    "value": [
+                      "Mbps",
+                      "Gbps"
+                    ]
+                  }
+                ],
+                "place": [
+                  {
+                    "role": "installationAddress",
+                    "id": "LOC-4521",
+                    "alias": "Home Address",
+                    "postcode": "90210",
+                    "houseNumber": "12",
+                    "houseNumberExtension": "A",
+                    "street": "Sunset Blvd",
+                    "city": "Los Angeles",
+                    "country": "USA",
+                    "type": "residential"
+                  },
+                  {
+                    "role": "billingAddress",
+                    "id": "LOC-8899",
+                    "alias": "Billing Address",
+                    "postcode": "90211",
+                    "houseNumber": "34",
+                    "houseNumberExtension": "",
+                    "street": "Melrose Ave",
+                    "city": "Los Angeles",
+                    "country": "USA",
+                    "type": "billing"
+                  }
+                ],
+                "serviceSpecification": {
+                  "id": "SPEC-FTTH-100",
+                  "name": "CFS_ACCESS",
+                  "version": "1.0"
+                }
+              },
+              "serviceOrderItemRelationship": [
+                {
+                  "relationshipType": "reliesOn",
+                  "orderItem": {
+                    "itemId": "SOI-DEP-001"
+                  }
+                },
+                {
+                  "relationshipType": "complements",
+                  "orderItem": {
+                    "itemId": "SOI-002"
+                  }
+                }
+              ]
+            },
+            {
+              "id": "SOI-002",
+              "action": "add",
+              "quantity": "1",
+              "service": {
+                "serviceCharacteristic": [
+                  {
+                    "name": "VoiceLineType",
+                    "valueType": "string",
+                    "value": [
+                      "VOIP",
+                      "Analog"
+                    ]
+                  },
+                  {
+                    "name": "MinutesBundle",
+                    "valueType": "integer",
+                    "value": [
+                      "500",
+                      "1000"
+                    ]
+                  },
+                  {
+                    "name": "MinutesBundle2",
+                    "valueType": "integer",
+                    "value": [
+                      "500",
+                      "1000"
+                    ]
+                  },
+                  {
+                    "name": "notes",
+                    "valueType": "integer",
+                    "value": [
+                      "memo500",
+                      "1000"
+                    ]
+                  }
+                ],
+                "place": [
+                  {
+                    "role": "installationAddress",
+                    "id": "LOC-4521",
+                    "alias": "Home Address",
+                    "postcode": "90210",
+                    "houseNumber": "12",
+                    "houseNumberExtension": "A",
+                    "street": "Sunset Blvd",
+                    "city": "Los Angeles",
+                    "country": "USA",
+                    "type": "residential"
+                  },
+                  {
+                    "role": "billingAddress",
+                    "id": "LOC-8899",
+                    "alias": "Billing Address",
+                    "postcode": "90211",
+                    "houseNumber": "34",
+                    "houseNumberExtension": "",
+                    "street": "Melrose Ave",
+                    "city": "Los Angeles",
+                    "country": "USA",
+                    "type": "billing"
+                  }
+                ],
+                "serviceSpecification": {
+                  "id": "SPEC-VOIP-500",
+                  "name": "B2C TMF641 Service",
+                  "version": "2.1"
+                }
+              },
+              "serviceOrderItemRelationship": [
+                {
+                  "relationshipType": "dependency",
+                  "orderItem": {
+                    "itemId": "SOI-001"
+                  }
+                },
+                {
+                  "relationshipType": "bundledWith",
+                  "orderItem": {
+                    "itemId": "SOI-003"
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      }
+    },
+    "Mapping_Subflow_1:Mapping_Test": {
+      "name": "Mapping_Test",
+      "flowId": "flow:Mapping_Subflow_1",
+      "flowName": "Mapping_Subflow_1",
+      "disabled": false,
+      "flowInputs": {
+        "body": {
+          "requestId": "REQ-20251021-001",
+          "externalId": "EXT-ORDER-987654321",
+          "description": "New fiber internet and phone bundle order",
+          "relatedParty": [
+            {
+              "role": "customer",
+              "id": "CUST-00123",
+              "name": "John Doe"
+            },
+            {
+              "role": "salesAgent",
+              "id": "AGENT-5566",
+              "name": "Jane Smith"
+            }
+          ],
+          "bssCustomerRelatedParty": [
+            {
+              "personDetails": {
+                "firstName": "John",
+                "lastName": "Doe",
+                "prefix": "Mr.",
+                "birthDate": "1985-07-15",
+                "gender": "Male",
+                "emailAddress": "john.doe@example.com",
+                "phone": "+1234567890"
+              },
+              "iban": "DE89370400440532013000",
+              "bankAccountName": "John Doe",
+              "usage": "Direct Debit for service payment",
+              "commercialOffer": "FiberPro100",
+              "crmAccountId": "CRM-ACC-998877",
+              "id": "PARTY-778899"
+            },
+            {
+              "personDetails": {
+                "firstName": "Emily",
+                "lastName": "Clark",
+                "prefix": "Ms.",
+                "birthDate": "1990-04-25",
+                "gender": "Female",
+                "emailAddress": "emily.clark@example.com",
+                "phone": "+1234567891"
+              },
+              "iban": "FR1420041010050500013M02606",
+              "bankAccountName": "Emily Clark",
+              "usage": "Backup billing account",
+              "commercialOffer": "PhoneLineBasic",
+              "crmAccountId": "CRM-ACC-998878",
+              "id": "PARTY-778900"
+            }
+          ],
+          "discountRelatedParty": [
+            {
+              "id": "DISC-2025-OCT",
+              "role": "promotion",
+              "variantCode": "FIBER50-OFF"
+            },
+            {
+              "id": "DISC-LOYALTY",
+              "role": "loyaltyProgram",
+              "variantCode": "LOYALTY10"
+            }
+          ],
+          "summarySentOnDate": {
+            "summarySentOnDate": "2025-10-21"
+          },
+          "serviceOrderItem": [
+            {
+              "id": "SOI-001",
+              "action": "add",
+              "quantity": "1",
+              "service": {
+                "serviceCharacteristic": [
+                  {
+                    "name": "Bandwidth",
+                    "valueType": "integer",
+                    "value": [
+                      "100",
+                      "200"
+                    ]
+                  },
+                  {
+                    "name": "SpeedUnit",
+                    "valueType": "string",
+                    "value": [
+                      "Mbps",
+                      "Gbps"
+                    ]
+                  }
+                ],
+                "place": [
+                  {
+                    "role": "installationAddress",
+                    "id": "LOC-4521",
+                    "alias": "Home Address",
+                    "postcode": "90210",
+                    "houseNumber": "12",
+                    "houseNumberExtension": "A",
+                    "street": "Sunset Blvd",
+                    "city": "Los Angeles",
+                    "country": "USA",
+                    "type": "residential"
+                  },
+                  {
+                    "role": "billingAddress",
+                    "id": "LOC-8899",
+                    "alias": "Billing Address",
+                    "postcode": "90211",
+                    "houseNumber": "34",
+                    "houseNumberExtension": "",
+                    "street": "Melrose Ave",
+                    "city": "Los Angeles",
+                    "country": "USA",
+                    "type": "billing"
+                  }
+                ],
+                "serviceSpecification": {
+                  "id": "SPEC-FTTH-100",
+                  "name": "CFS_ACCESS",
+                  "version": "1.0"
+                }
+              },
+              "serviceOrderItemRelationship": [
+                {
+                  "relationshipType": "reliesOn",
+                  "orderItem": {
+                    "itemId": "SOI-DEP-001"
+                  }
+                },
+                {
+                  "relationshipType": "complements",
+                  "orderItem": {
+                    "itemId": "SOI-002"
+                  }
+                }
+              ]
+            },
+            {
+              "id": "SOI-002",
+              "action": "add",
+              "quantity": "1",
+              "service": {
+                "serviceCharacteristic": [
+                  {
+                    "name": "VoiceLineType",
+                    "valueType": "string",
+                    "value": [
+                      "VOIP",
+                      "Analog"
+                    ]
+                  },
+                  {
+                    "name": "MinutesBundle",
+                    "valueType": "integer",
+                    "value": [
+                      "500",
+                      "1000"
+                    ]
+                  },
+                  {
+                    "name": "MinutesBundle2",
+                    "valueType": "integer",
+                    "value": [
+                      "500",
+                      "1000"
+                    ]
+                  },
+                  {
+                    "name": "notes",
+                    "valueType": "integer",
+                    "value": [
+                      "memo500",
+                      "1000"
+                    ]
+                  }
+                ],
+                "place": [
+                  {
+                    "role": "installationAddress",
+                    "id": "LOC-4521",
+                    "alias": "Home Address",
+                    "postcode": "90210",
+                    "houseNumber": "12",
+                    "houseNumberExtension": "A",
+                    "street": "Sunset Blvd",
+                    "city": "Los Angeles",
+                    "country": "USA",
+                    "type": "residential"
+                  },
+                  {
+                    "role": "billingAddress",
+                    "id": "LOC-8899",
+                    "alias": "Billing Address",
+                    "postcode": "90211",
+                    "houseNumber": "34",
+                    "houseNumberExtension": "",
+                    "street": "Melrose Ave",
+                    "city": "Los Angeles",
+                    "country": "USA",
+                    "type": "billing"
+                  }
+                ],
+                "serviceSpecification": {
+                  "id": "SPEC-VOIP-500",
+                  "name": "B2C TMF641 Service",
+                  "version": "2.1"
+                }
+              },
+              "serviceOrderItemRelationship": [
+                {
+                  "relationshipType": "dependency",
+                  "orderItem": {
+                    "itemId": "SOI-001"
+                  }
+                },
+                {
+                  "relationshipType": "bundledWith",
+                  "orderItem": {
+                    "itemId": "SOI-003"
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      }
+    }
+  },
+  "type": "flogo:unittest",
+  "model": "1.1.1",
+  "app": {
+    "name": "FixedCustomerOrderMove",
+    "version": "1.0.0"
+  }
+}
