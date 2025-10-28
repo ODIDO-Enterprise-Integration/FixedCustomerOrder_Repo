@@ -29,8 +29,8 @@
       "name": "tibco-wi-rest",
       "description": "Simple REST Trigger",
       "settings": {
-        "port": "=$property[\"HTTPConnection.port\"]",
-        "APISpecUpdate": true,
+        "port": 9999,
+        "APISpecUpdate": false,
         "swagger": "spec://89021254",
         "swaggerVersion": "v3",
         "apiVersion": "1.0",
@@ -52,7 +52,7 @@
           "action": {
             "ref": "github.com/project-flogo/flow",
             "settings": {
-              "flowURI": "res://flow:FixedCustomerOrderCancel_HTTPRequest"
+              "flowURI": "res://flow:FixedCustomerOrderCancel"
             },
             "input": {
               "body": "=$.body",
@@ -80,7 +80,7 @@
               "responseCodesSchema": {
                 "type": "json",
                 "value": "{\"$schema\":\"http://json-schema.org/draft-04/schema#\",\"type\":\"array\",\"items\":{\"type\":\"object\",\"properties\":{\"code\":{\"type\":\"string\"},\"responseType\":{\"type\":\"string\"},\"responseSchema\":{\"type\":\"string\"}},\"required\":[\"code\",\"responseType\",\"responseSchema\"]}}",
-                "fe_metadata": "[{\"code\":\"200\",\"responseType\":\"object\",\"responseSchema\":\"{\\\"resultCode\\\":0,\\n    \\\"resultText\\\":\\\"Success\\\"\\n}\"},{\"code\":\"400\",\"responseType\":\"object\",\"responseSchema\":\"{\\n  \\\"errors\\\": {\\n    \\\"error\\\": [\\n      \\\"Cancel order with order status: None is not allowed.\\\"\\n    ]\\n  },\\n  \\\"title\\\": \\\"Validation error\\\",\\n  \\\"status\\\": 400\\n}\"},{\"code\":\"404\",\"responseType\":\"object\",\"responseSchema\":\"{\\n  \\\"errors\\\": {\\n    \\\"error\\\": [\\n      \\\"Cancel order with order status: None is not allowed.\\\"\\n    ]\\n  },\\n  \\\"title\\\": \\\"Validation error\\\",\\n  \\\"status\\\": 400\\n}\"},{\"code\":\"500\",\"responseType\":\"object\",\"responseSchema\":\"{\\n  \\\"errors\\\": {\\n    \\\"error\\\": [\\n      \\\"Cancel order with order status: None is not allowed.\\\"\\n    ]\\n  },\\n  \\\"title\\\": \\\"Validation error\\\",\\n  \\\"status\\\": 400\\n}\"}]"
+                "fe_metadata": "[{\"code\":\"200\",\"responseType\":\"object\",\"responseSchema\":\"{\\n    \\\"resultCode\\\": 0,\\n    \\\"resultText\\\": \\\"SUCCESS\\\"\\n}\"},{\"code\":\"400\",\"responseType\":\"object\",\"responseSchema\":\"{\\n  \\\"errors\\\": {\\n    \\\"error\\\": [\\n      \\\"Cancel order with order status: None is not allowed.\\\"\\n    ]\\n  },\\n  \\\"title\\\": \\\"Validation error\\\",\\n  \\\"status\\\": 400\\n}\"},{\"code\":\"404\",\"responseType\":\"object\",\"responseSchema\":\"{\\n  \\\"errors\\\": {\\n    \\\"error\\\": [\\n      \\\"Cancel order with order status: None is not allowed.\\\"\\n    ]\\n  },\\n  \\\"title\\\": \\\"Validation error\\\",\\n  \\\"status\\\": 400\\n}\"},{\"code\":\"500\",\"responseType\":\"object\",\"responseSchema\":\"{\\n  \\\"errors\\\": {\\n    \\\"error\\\": [\\n      \\\"Cancel order with order status: None is not allowed.\\\"\\n    ]\\n  },\\n  \\\"title\\\": \\\"Validation error\\\",\\n  \\\"status\\\": 400\\n}\"}]"
               }
             },
             "output": {
@@ -106,16 +106,16 @@
               }
             }
           },
-          "name": "FixedCustomerOrderCancel_HTTPRequest"
+          "name": "FixedCustomerOrderCancel"
         }
       ]
     }
   ],
   "resources": [
     {
-      "id": "flow:FixedCustomerOrderCancel_HTTPRequest",
+      "id": "flow:FixedCustomerOrderCancel",
       "data": {
-        "name": "FixedCustomerOrderCancel_HTTPRequest",
+        "name": "FixedCustomerOrderCancel",
         "description": "This flow will take request coming from Gateway, validate request, call backend through subflows and create the final response",
         "links": [
           {
@@ -171,10 +171,38 @@
           },
           {
             "id": 8,
+            "from": "callValidationFlow",
+            "to": "RequestPOSTValidation",
+            "type": "label",
+            "label": "callValidationFlow to LogMessage3"
+          },
+          {
+            "id": 9,
+            "from": "RequestPOSTValidation",
+            "to": "callcancelOrder",
+            "type": "label",
+            "label": "LogMessage3 to callcancelOrder"
+          },
+          {
+            "id": 10,
             "from": "StartActivity",
             "to": "callValidationFlow",
             "type": "exprOtherwise",
             "label": "debug_false"
+          },
+          {
+            "id": 11,
+            "from": "StartActivity",
+            "to": "LogIncomingRequest",
+            "type": "label",
+            "label": "StartActivity to LogMessage2"
+          },
+          {
+            "id": 12,
+            "from": "LogIncomingRequest",
+            "to": "callValidationFlow",
+            "type": "label",
+            "label": "LogMessage2 to callValidationFlow"
           }
         ],
         "tasks": [
@@ -195,7 +223,7 @@
               "input": {
                 "Log Level": "INFO",
                 "flowInfo": true,
-                "message": "=string.concat(coerce.toString($flow.body),\"Log onput in Main Flow\")",
+                "message": "=string.concat(\"RESP_OUT_FixedCustomerOrderCancel\",coerce.toString($flow.body))",
                 "logLevel": ""
               }
             }
@@ -263,7 +291,11 @@
                 "inputs1": {
                   "mapping": {
                     "body": "=$flow.body",
-                    "headers": "=$flow.headers"
+                    "headers": {
+                      "xAPI-requestID": "=$flow.headers[\"xAPI-requestID\"]",
+                      "xAPI-orgTimestamp": "=$flow.headers[\"xAPI-orgTimestamp\"]",
+                      "xAPI-correlationID": "=$flow.headers[\"xAPI-correlationID\"]"
+                    }
                   }
                 }
               },
@@ -312,8 +344,8 @@
                 "input": {
                   "mapping": {
                     "body": {
-                      "resultCode": 200,
-                      "resultText": "New order status is :Cancelled"
+                      "resultCode": 0,
+                      "reultText": "New order status is :Cancelled"
                     }
                   }
                 }
@@ -323,14 +355,14 @@
                   "input": {
                     "type": "json",
                     "value": "{\"$schema\":\"http://json-schema.org/draft-04/schema#\",\"type\":\"object\",\"properties\":{\"body\":{\"type\":\"object\",\"properties\":{\"resultCode\":{\"type\":\"number\"},\"resultText\":{\"type\":\"string\"}}}}}",
-                    "fe_metadata": "{\"body\":{\"resultCode\":0,\"resultText\":\"Success\"}}"
+                    "fe_metadata": "{\"body\":{\"resultCode\":0,\"resultText\":\"SUCCESS\"}}"
                   }
                 },
                 "output": {
                   "response": {
                     "type": "json",
                     "value": "{\"$schema\":\"http://json-schema.org/draft-04/schema#\",\"type\":\"object\",\"properties\":{\"body\":{\"type\":\"object\",\"properties\":{\"resultCode\":{\"type\":\"number\"},\"resultText\":{\"type\":\"string\"}}}}}",
-                    "fe_metadata": "{\"body\":{\"resultCode\":0,\"resultText\":\"Success\"}}"
+                    "fe_metadata": "{\"body\":{\"resultCode\":0,\"resultText\":\"SUCCESS\"}}"
                   }
                 }
               },
@@ -350,9 +382,37 @@
                 }
               }
             }
+          },
+          {
+            "id": "RequestPOSTValidation",
+            "name": "RequestPOSTValidation",
+            "description": "Simple Log Message Activity",
+            "activity": {
+              "ref": "#log",
+              "input": {
+                "Log Level": "INFO",
+                "flowInfo": false,
+                "message": "=string.concat(\"REQ_VALIDATED\",coerce.toString($flow.body))",
+                "logLevel": ""
+              }
+            }
+          },
+          {
+            "id": "LogIncomingRequest",
+            "name": "LogIncomingRequest",
+            "description": "Simple Log Message Activity",
+            "activity": {
+              "ref": "#log",
+              "input": {
+                "Log Level": "INFO",
+                "flowInfo": false,
+                "message": "=string.concat(\"REQ_IN_FixedCustomerOrderCancel_2\",coerce.toString($flow.body))",
+                "logLevel": ""
+              }
+            }
           }
         ],
-        "fe_metadata": "eyJTdGFydEFjdGl2aXR5Ijp7IngiOjEwMCwieSI6MTAwfSwiTG9nSW5wdXRNZXNzYWdlIjp7IngiOjIyNCwieSI6MjIxfSwiY2FsbFZhbGlkYXRpb25GbG93Ijp7IngiOjQzMCwieSI6MTA4fSwiY2FsbGNhbmNlbE9yZGVyIjp7IngiOjYxNCwieSI6MTAwfSwiTG9nTWVzc2FnZSI6eyJ4Ijo3NzQsInkiOjMwMX0sIkNvbmZpZ3VyZUhUVFBSZXNwb25zZSI6eyJ4Ijo5NzQsInkiOjkzfSwiUmV0dXJuIjp7IngiOjExNjUsInkiOjk2fX0=",
+        "fe_metadata": "eyJTdGFydEFjdGl2aXR5Ijp7IngiOjAsInkiOjM4fSwiTG9nSW5wdXRNZXNzYWdlIjp7IngiOjIyNCwieSI6MjE2fSwiY2FsbFZhbGlkYXRpb25GbG93Ijp7IngiOjQxNiwieSI6NzJ9LCJjYWxsY2FuY2VsT3JkZXIiOnsieCI6ODQzLCJ5IjoyMzJ9LCJMb2dNZXNzYWdlIjp7IngiOjk5MiwieSI6NTEyfSwiQ29uZmlndXJlSFRUUFJlc3BvbnNlIjp7IngiOjExNzIsInkiOjEyOH0sIlJldHVybiI6eyJ4IjoxNDAyLCJ5IjoyNDd9LCJSZXF1ZXN0UE9TVFZhbGlkYXRpb24iOnsieCI6NTk3LCJ5Ijo1fSwiTG9nSW5jb21pbmdSZXF1ZXN0Ijp7IngiOjI0MCwieSI6Mn19",
         "errorHandler": {
           "tasks": [
             {
@@ -403,13 +463,13 @@
                   "input": {
                     "mapping": {
                       "body": {
-                        "status": "=$activity[MapError].output.statusCode",
-                        "title": "=$activity[MapError].output.statusDescription",
                         "errors": {
                           "error": [
                             "=$activity[MapError].output.statusDescription"
                           ]
-                        }
+                        },
+                        "title": "Validation Error",
+                        "status": 30
                       }
                     }
                   }
@@ -484,7 +544,7 @@
                           ]
                         },
                         "status": "=$activity[MapError].output.statusCode",
-                        "title": "=$activity[MapError].output.statusDescription"
+                        "title": "Connectivity Error"
                       }
                     }
                   }
@@ -627,15 +687,7 @@
                   "responsecode": "500",
                   "input": {
                     "mapping": {
-                      "body": {
-                        "errors": {
-                          "error": [
-                            "=$error.message"
-                          ]
-                        },
-                        "status": 500,
-                        "title": "=$error.message"
-                      }
+                      "body": "=string.concat(coerce.toString($error.data), $error.code,$error.message)"
                     }
                   }
                 },
@@ -694,7 +746,7 @@
           ],
           "links": [
             {
-              "id": 9,
+              "id": 13,
               "from": "NoOp",
               "to": "MapError",
               "type": "expression",
@@ -702,7 +754,7 @@
               "value": "isDefined($error.data)"
             },
             {
-              "id": 10,
+              "id": 14,
               "from": "MapError",
               "to": "400ErrorResponse",
               "type": "expression",
@@ -710,85 +762,85 @@
               "value": "$activity[MapError].output.statusCode == 9000"
             },
             {
-              "id": 11,
+              "id": 15,
               "from": "400ErrorResponse",
               "to": "LogMessage1",
               "type": "label",
               "label": "400ErrorResponse to LogMessage1"
             },
             {
-              "id": 12,
+              "id": 16,
               "from": "LogMessage1",
               "to": "Return_400",
               "type": "label",
               "label": "LogMessage1 to Return_400"
             },
             {
-              "id": 13,
+              "id": 17,
               "from": "MapError",
               "to": "500ErrorResponse",
               "type": "expression",
               "label": "MapError to CopyOf400ErrorResponse",
-              "value": "$activity[MapError].output.statusCode == 8000 ||$activity[MapError].output.statusCode == 7000 "
+              "value": "$activity[MapError].output.statusCode == 10 ||  string.contains($error.message,\"Timeout\")"
             },
             {
-              "id": 14,
+              "id": 18,
               "from": "500ErrorResponse",
               "to": "CopyOfLogMessage1",
               "type": "label",
               "label": "500ErrorResponse to CopyOfLogMessage1"
             },
             {
-              "id": 15,
+              "id": 19,
               "from": "CopyOfLogMessage1",
               "to": "Return_500",
               "type": "label",
               "label": "CopyOfLogMessage1 to Return_500"
             },
             {
-              "id": 16,
+              "id": 20,
               "from": "MapError",
               "to": "DefaultErrorResponse",
               "type": "exprOtherwise",
               "label": "MapError to DefaultErrorResponse"
             },
             {
-              "id": 17,
+              "id": 21,
               "from": "DefaultErrorResponse",
               "to": "CopyOfCopyOfLogMessage1",
               "type": "label",
               "label": "DefaultErrorResponse to CopyOfCopyOfLogMessage1"
             },
             {
-              "id": 18,
+              "id": 22,
               "from": "CopyOfCopyOfLogMessage1",
               "to": "Return_Default",
               "type": "label",
               "label": "CopyOfCopyOfLogMessage1 to Return_Default"
             },
             {
-              "id": 19,
+              "id": 23,
               "from": "NoOp",
               "to": "DefaultMapError",
               "type": "exprOtherwise",
               "label": "NoOp to CopyOf409ErrorResponse"
             },
             {
-              "id": 20,
+              "id": 24,
               "from": "DefaultMapError",
               "to": "CopyOfCopyOfCopyOfLogMessage1",
               "type": "label",
               "label": "DefaultMapError to CopyOfCopyOfCopyOfLogMessage1"
             },
             {
-              "id": 21,
+              "id": 25,
               "from": "CopyOfCopyOfCopyOfLogMessage1",
               "to": "CopyOfReturn_Default",
               "type": "label",
               "label": "CopyOfCopyOfCopyOfLogMessage1 to CopyOfReturn_Default"
             }
           ],
-          "fe_metadata": "eyJOb09wIjp7IngiOjI4MCwieSI6MTEzfSwiTWFwRXJyb3IiOnsieCI6NDY1LCJ5Ijo5Nn0sIjQwMEVycm9yUmVzcG9uc2UiOnsieCI6Njc3LCJ5Ijo5OX0sIkxvZ01lc3NhZ2UxIjp7IngiOjgzNywieSI6MTAxfSwiUmV0dXJuXzQwMCI6eyJ4IjoxMTA0LCJ5Ijo5NX0sIjUwMEVycm9yUmVzcG9uc2UiOnsieCI6NjkwLCJ5IjoyMjh9LCJDb3B5T2ZMb2dNZXNzYWdlMSI6eyJ4Ijo4NzgsInkiOjIyM30sIlJldHVybl81MDAiOnsieCI6MTExMywieSI6MjE5fSwiRGVmYXVsdEVycm9yUmVzcG9uc2UiOnsieCI6NjkzLCJ5Ijo0MDJ9LCJDb3B5T2ZDb3B5T2ZMb2dNZXNzYWdlMSI6eyJ4Ijo4NDcsInkiOjM5NH0sIlJldHVybl9EZWZhdWx0Ijp7IngiOjExMzEsInkiOjM4NH0sIkRlZmF1bHRNYXBFcnJvciI6eyJ4Ijo0NzUsInkiOjYxMX0sIkNvcHlPZkNvcHlPZkNvcHlPZkxvZ01lc3NhZ2UxIjp7IngiOjc0NiwieSI6NTc3fSwiQ29weU9mUmV0dXJuX0RlZmF1bHQiOnsieCI6MTAwMywieSI6NTYyfX0="
+          "fe_metadata": "eyJOb09wIjp7IngiOjI4MCwieSI6MTEzfSwiTWFwRXJyb3IiOnsieCI6NDYzLCJ5Ijo5Nn0sIjQwMEVycm9yUmVzcG9uc2UiOnsieCI6Njc5LCJ5IjoxMDR9LCJMb2dNZXNzYWdlMSI6eyJ4Ijo4MzcsInkiOjEwMX0sIlJldHVybl80MDAiOnsieCI6MTEwNCwieSI6OTV9LCI1MDBFcnJvclJlc3BvbnNlIjp7IngiOjY5MywieSI6MjI3fSwiQ29weU9mTG9nTWVzc2FnZTEiOnsieCI6ODc4LCJ5IjoyMjF9LCJSZXR1cm5fNTAwIjp7IngiOjExMTEsInkiOjIxOX0sIkRlZmF1bHRFcnJvclJlc3BvbnNlIjp7IngiOjY5MCwieSI6NDAyfSwiQ29weU9mQ29weU9mTG9nTWVzc2FnZTEiOnsieCI6ODQ5LCJ5IjozOTJ9LCJSZXR1cm5fRGVmYXVsdCI6eyJ4IjoxMTMxLCJ5IjozODZ9LCJEZWZhdWx0TWFwRXJyb3IiOnsieCI6NDc1LCJ5Ijo2MTF9LCJDb3B5T2ZDb3B5T2ZDb3B5T2ZMb2dNZXNzYWdlMSI6eyJ4Ijo3NDYsInkiOjU3N30sIkNvcHlPZlJldHVybl9EZWZhdWx0Ijp7IngiOjEwMDMsInkiOjU2Mn19"
         },
         "metadata": {
           "input": [
@@ -924,7 +976,7 @@
                     {
                       "$flow.inputs1.headers[\"xAPI-correlationID\"] == null || string.length(string.trim($flow.inputs1.headers[\"xAPI-correlationID\"], \" \")) ==0": {
                         "statusDescription": "Mandtory element missing. Please provide the correlation Id in the request",
-                        "statusCode": 30
+                        "statusCode": 9000
                       }
                     }
                   ]
@@ -1026,7 +1078,7 @@
             }
           }
         ],
-        "fe_metadata": "eyJTdGFydEFjdGl2aXR5Ijp7IngiOjIxLCJ5IjoxMDN9LCJMb2dNZXNzYWdlIjp7IngiOjEzNCwieSI6OTR9LCJNYXBfRXJyb3IiOnsieCI6NDU2LCJ5IjoxMDZ9LCJUaHJvd0Vycm9yIjp7IngiOjY4MSwieSI6MTA0fSwiU3VjZXNzTWFwIjp7IngiOjQ5MCwieSI6MzYwfSwiTG9nTWVzc2FnZTEiOnsieCI6Njg5LCJ5IjozNTJ9LCJSZXR1cm4iOnsieCI6OTM4LCJ5IjozNDd9fQ==",
+        "fe_metadata": "eyJTdGFydEFjdGl2aXR5Ijp7IngiOjIxLCJ5IjoxMDN9LCJMb2dNZXNzYWdlIjp7IngiOjEzNSwieSI6OTR9LCJNYXBfRXJyb3IiOnsieCI6NDU4LCJ5IjoxMDd9LCJUaHJvd0Vycm9yIjp7IngiOjY4MSwieSI6MTA0fSwiU3VjZXNzTWFwIjp7IngiOjQ5MCwieSI6MzYwfSwiTG9nTWVzc2FnZTEiOnsieCI6Njg5LCJ5IjozNTJ9LCJSZXR1cm4iOnsieCI6OTM4LCJ5IjozNDd9fQ==",
         "metadata": {
           "input": [
             {
@@ -1090,13 +1142,13 @@
           {
             "id": 3,
             "from": "InvokeRESTService",
-            "to": "LogMessage1",
+            "to": "LogBackendResponse",
             "type": "label",
             "label": "InvokeRESTService to LogMessage1"
           },
           {
             "id": 4,
-            "from": "LogMessage1",
+            "from": "LogBackendResponse",
             "to": "Return",
             "type": "expression",
             "label": "LogMessage1 to Return",
@@ -1104,7 +1156,7 @@
           },
           {
             "id": 5,
-            "from": "LogMessage1",
+            "from": "LogBackendResponse",
             "to": "BcakendMap",
             "type": "exprOtherwise",
             "label": "LogMessage1 to BcakendMap"
@@ -1136,6 +1188,20 @@
             "to": "ThrowError",
             "type": "label",
             "label": "CopyOfLogMessage1 to ThrowError"
+          },
+          {
+            "id": 10,
+            "from": "LogMessage",
+            "to": "LogRequestBeforeCallingBackend",
+            "type": "label",
+            "label": "LogMessage to LogMessage2"
+          },
+          {
+            "id": 11,
+            "from": "LogRequestBeforeCallingBackend",
+            "to": "InvokeRESTService",
+            "type": "label",
+            "label": "LogMessage2 to InvokeRESTService"
           }
         ],
         "tasks": [
@@ -1197,13 +1263,8 @@
                 "headers": {
                   "mapping": {
                     "Content-Type": "application/json",
-                    "xAPI-correlationID": "=$flow.inputs1.headers[\"xAPI-correlationID\"]",
-                    "xAPI-timestamp": "=$flow.inputs1.headers[\"xAPI-timestamp\"]",
                     "xAPI-orgTimestamp": "=$flow.inputs1.headers[\"xAPI-orgTimestamp\"]",
-                    "xAPI-userID": "=$flow.inputs1.headers[\"xAPI-userID\"]",
-                    "xAPI-serviceProvider": "=$flow.inputs1.headers[\"xAPI-serviceProvider\"]",
                     "xAPI-serviceName": "OrderCancel_1",
-                    "xAPI-businessComponent": "=$flow.inputs1.headers[\"xAPI-businessComponent\"]",
                     "xAPI-priority": "value",
                     "xAPI-version": "123",
                     "xAPI-requestID": {
@@ -1220,6 +1281,41 @@
                       "@conditional": [
                         {
                           "isDefined($flow.inputs1.headers[\"xAPI-searchKey\"]) && (string.length(string.trim($flow.inputs1.headers[\"xAPI-searchKey\"],\"\") ) > 0)": "=coerce.toArray($flow.inputs1.headers[\"xAPI-searchKey\"])"
+                        }
+                      ]
+                    },
+                    "xAPI-timestamp": {
+                      "@conditional": [
+                        {
+                          "isDefined($flow.inputs1.headers[\"xAPI-timestamp\"])": "=$flow.inputs1.headers[\"xAPI-timestamp\"]"
+                        }
+                      ]
+                    },
+                    "xAPI-businessComponent": {
+                      "@conditional": [
+                        {
+                          "isDefined($flow.inputs1.headers[\"xAPI-businessComponent\"])": "=$flow.inputs1.headers[\"xAPI-businessComponent\"]"
+                        }
+                      ]
+                    },
+                    "xAPI-correlationID": {
+                      "@conditional": [
+                        {
+                          "isDefined($flow.inputs1.headers[\"xAPI-correlationID\"])": "=$flow.inputs1.headers[\"xAPI-correlationID\"]"
+                        }
+                      ]
+                    },
+                    "xAPI-serviceProvider": {
+                      "@conditional": [
+                        {
+                          "isDefined($flow.inputs1.headers[\"xAPI-serviceProvider\"])": "=$flow.inputs1.headers[\"xAPI-serviceProvider\"]"
+                        }
+                      ]
+                    },
+                    "xAPI-userID": {
+                      "@conditional": [
+                        {
+                          "isDefined($flow.inputs1.headers[\"xAPI-userID\"])": "=$flow.inputs1.headers[\"xAPI-userID\"]"
                         }
                       ]
                     }
@@ -1285,15 +1381,15 @@
             }
           },
           {
-            "id": "LogMessage1",
-            "name": "LogMessage1",
+            "id": "LogBackendResponse",
+            "name": "LogBackendResponse",
             "description": "Simple Log Message Activity",
             "activity": {
               "ref": "#log",
               "input": {
                 "Log Level": "INFO",
                 "flowInfo": false,
-                "message": "=string.concat(\"Response received from backend\",coerce.toString($activity[InvokeRESTService]))",
+                "message": "=string.concat(\"RESP_IN_FixedCutomerOrderCancel_POSTCancelOrder\",coerce.toString($activity[InvokeRESTService]))",
                 "logLevel": ""
               }
             }
@@ -1329,8 +1425,8 @@
               "input": {
                 "input": {
                   "mapping": {
-                    "statusCode": 10,
-                    "statusDescription": "=coerce.toString($activity[InvokeRESTService].responseCodes)"
+                    "statusDescription": "=coerce.toString($activity[InvokeRESTService].responseCodes)",
+                    "statusCode": 30
                   }
                 }
               },
@@ -1374,8 +1470,8 @@
               "input": {
                 "input": {
                   "mapping": {
-                    "statusCode": 30,
-                    "statusDescription": "=string.concat(\"REST Server returned status code\",$error[InvokeRESTService].message)"
+                    "statusDescription": "=string.concat(\"REST Server returned status code\",$error[InvokeRESTService].message)",
+                    "statusCode": 10
                   }
                 }
               },
@@ -1423,9 +1519,23 @@
                 "data": "=$activity[MapError].output"
               }
             }
+          },
+          {
+            "id": "LogRequestBeforeCallingBackend",
+            "name": "LogRequestBeforeCallingBackend",
+            "description": "Simple Log Message Activity",
+            "activity": {
+              "ref": "#log",
+              "input": {
+                "Log Level": "INFO",
+                "flowInfo": false,
+                "message": "=string.concat(\"REQ_OUT_FixedCustomerOrderCancel_CancelOrder\",coerce.toString($flow.inputs1.body))",
+                "logLevel": ""
+              }
+            }
           }
         ],
-        "fe_metadata": "eyJTdGFydEFjdGl2aXR5Ijp7IngiOjEwLCJ5Ijo5NX0sIkxvZ01lc3NhZ2UiOnsieCI6OTQsInkiOjkzfSwiSW52b2tlUkVTVFNlcnZpY2UiOnsieCI6MzA2LCJ5IjoxMDN9LCJMb2dNZXNzYWdlMSI6eyJ4Ijo1ODcsInkiOjEwNn0sIlJldHVybiI6eyJ4Ijo4NTgsInkiOjExM30sIkJjYWtlbmRNYXAiOnsieCI6ODIyLCJ5IjoyNDB9LCJDb3B5T2ZUaHJvd0Vycm9yIjp7IngiOjk4NiwieSI6MjM3fSwiTWFwRXJyb3IiOnsieCI6NTYzLCJ5Ijo0NDZ9LCJDb3B5T2ZMb2dNZXNzYWdlMSI6eyJ4Ijo3NDAsInkiOjQxNX0sIlRocm93RXJyb3IiOnsieCI6OTY1LCJ5IjozOTN9fQ==",
+        "fe_metadata": "eyJTdGFydEFjdGl2aXR5Ijp7IngiOjEwLCJ5Ijo5NX0sIkxvZ01lc3NhZ2UiOnsieCI6NTYsInkiOjExNX0sIkludm9rZVJFU1RTZXJ2aWNlIjp7IngiOjI2OSwieSI6MTI4fSwiTG9nQmFja2VuZFJlc3BvbnNlIjp7IngiOjU4OSwieSI6MTA0fSwiUmV0dXJuIjp7IngiOjg2NCwieSI6MTE1fSwiQmNha2VuZE1hcCI6eyJ4Ijo4MjIsInkiOjI0Mn0sIkNvcHlPZlRocm93RXJyb3IiOnsieCI6OTg2LCJ5IjoyMzd9LCJNYXBFcnJvciI6eyJ4Ijo1NjMsInkiOjQ0NX0sIkNvcHlPZkxvZ01lc3NhZ2UxIjp7IngiOjc0MCwieSI6NDE1fSwiVGhyb3dFcnJvciI6eyJ4Ijo5NjUsInkiOjM5M30sIkxvZ1JlcXVlc3RCZWZvcmVDYWxsaW5nQmFja2VuZCI6eyJ4IjoyNDUsInkiOjQxfX0=",
         "metadata": {
           "input": [
             {
@@ -1453,7 +1563,7 @@
     {
       "name": "HTTPConnection.port",
       "type": "float64",
-      "value": 5001
+      "value": 9999
     },
     {
       "name": "HTTPConnection.host",
@@ -1464,16 +1574,6 @@
       "name": "Log.LoggingFlag",
       "type": "boolean",
       "value": true
-    },
-    {
-      "name": "createOrder.url",
-      "type": "string",
-      "value": "http://api.restful-api.dev/objects"
-    },
-    {
-      "name": "createOrder.host",
-      "type": "string",
-      "value": "api.restful-api.dev"
     },
     {
       "name": "CancelOrder.URL",
@@ -1507,11 +1607,6 @@
       "value": "{\n    \"$schema\": \"http://json-schema.org/draft-04/schema#\",\n    \"type\": \"object\",\n    \"properties\": {\n        \"requestId\": {\n            \"type\": \"string\"\n        },\n        \"externalId\": {\n            \"type\": \"string\"\n        },\n        \"description\": {\n            \"type\": \"string\"\n        },\n        \"relatedParty\": {\n            \"type\": \"array\",\n            \"items\": {\n                \"type\": \"object\",\n                \"properties\": {\n                    \"role\": {\n                        \"type\": \"string\"\n                    },\n                    \"id\": {\n                        \"type\": \"string\"\n                    },\n                    \"name\": {\n                        \"type\": \"string\"\n                    }\n                }\n            }\n        },\n        \"bssCustomerRelatedParty\": {\n            \"type\": \"array\",\n            \"items\": {\n                \"type\": \"object\",\n                \"properties\": {\n                    \"personDetails\": {\n                        \"type\": \"object\",\n                        \"properties\": {\n                            \"firstName\": {\n                                \"type\": \"string\"\n                            },\n                            \"lastName\": {\n                                \"type\": \"string\"\n                            },\n                            \"prefix\": {\n                                \"type\": \"string\"\n                            },\n                            \"birthDate\": {\n                                \"type\": \"string\"\n                            },\n                            \"gender\": {\n                                \"type\": \"string\"\n                            },\n                            \"emailAddress\": {\n                                \"type\": \"string\"\n                            },\n                            \"phone\": {\n                                \"type\": \"string\"\n                            }\n                        }\n                    },\n                    \"iban\": {\n                        \"type\": \"string\"\n                    },\n                    \"bankAccountName\": {\n                        \"type\": \"string\"\n                    },\n                    \"usage\": {\n                        \"type\": \"string\"\n                    },\n                    \"commercialOffer\": {\n                        \"type\": \"string\"\n                    },\n                    \"id\": {\n                        \"type\": \"string\"\n                    },\n                    \"contactId\": {\n                        \"type\": \"string\"\n                    },\n                    \"crmAccountId\": {\n                        \"type\": \"string\"\n                    },\n                    \"customerCode\": {\n                        \"type\": \"string\"\n                    },\n                    \"creditCheckInfo\": {\n                        \"type\": \"object\",\n                        \"properties\": {\n                            \"authorizationScore\": {\n                                \"type\": \"string\"\n                            },\n                            \"authorizationResult\": {\n                                \"type\": \"string\"\n                            },\n                            \"isOverruled\": {\n                                \"type\": \"string\"\n                            }\n                        }\n                    }\n                }\n            }\n        },\n        \"discountRelatedParty\": {\n            \"type\": \"array\",\n            \"items\": {\n                \"type\": \"object\",\n                \"properties\": {\n                    \"id\": {\n                        \"type\": \"string\"\n                    },\n                    \"role\": {\n                        \"type\": \"string\"\n                    },\n                    \"variantCode\": {\n                        \"type\": \"string\"\n                    }\n                }\n            }\n        },\n        \"summarySentOnDate\": {\n            \"type\": \"object\",\n            \"properties\": {\n                \"summarySentOnDate\": {\n                    \"type\": \"string\"\n                }\n            }\n        },\n        \"orderItem\": {\n            \"type\": \"array\",\n            \"items\": {\n                \"type\": \"object\",\n                \"properties\": {\n                    \"id\": {\n                        \"type\": \"string\"\n                    },\n                    \"action\": {\n                        \"type\": \"string\"\n                    },\n                    \"service\": {\n                        \"type\": \"object\",\n                        \"properties\": {\n                            \"serviceCharacteristic\": {\n                                \"type\": \"array\",\n                                \"items\": {\n                                    \"type\": \"object\",\n                                    \"properties\": {\n                                        \"name\": {\n                                            \"type\": \"string\"\n                                        },\n                                        \"valueType\": {\n                                            \"type\": \"string\"\n                                        },\n                                        \"value\": {\n                                            \"type\": \"string\"\n                                        }\n                                    }\n                                }\n                            },\n                            \"place\": {\n                                \"type\": \"array\",\n                                \"items\": {\n                                    \"type\": \"object\",\n                                    \"properties\": {\n                                        \"role\": {\n                                            \"type\": \"string\"\n                                        },\n                                        \"id\": {\n                                            \"type\": \"string\"\n                                        },\n                                        \"alias\": {\n                                            \"type\": \"string\"\n                                        },\n                                        \"postcode\": {\n                                            \"type\": \"string\"\n                                        },\n                                        \"houseNumber\": {\n                                            \"type\": \"string\"\n                                        },\n                                        \"houseNumberExtension\": {\n                                            \"type\": \"string\"\n                                        },\n                                        \"street\": {\n                                            \"type\": \"string\"\n                                        },\n                                        \"city\": {\n                                            \"type\": \"string\"\n                                        },\n                                        \"country\": {\n                                            \"type\": \"string\"\n                                        },\n                                        \"type\": {\n                                            \"type\": \"string\"\n                                        }\n                                    }\n                                }\n                            },\n                            \"serviceSpecification\": {\n                                \"type\": \"object\",\n                                \"properties\": {\n                                    \"name\": {\n                                        \"type\": \"string\"\n                                    }\n                                }\n                            }\n                        }\n                    },\n                    \"orderItemRelationship\": {\n                        \"type\": \"array\",\n                        \"items\": {\n                            \"type\": \"object\",\n                            \"properties\": {\n                                \"type\": {\n                                    \"type\": \"string\"\n                                },\n                                \"id\": {\n                                    \"type\": \"string\"\n                                }\n                            }\n                        }\n                    }\n                }\n            }\n        }\n    }\n}",
       "fe_metadata": "{\n    \"$schema\": \"http://json-schema.org/draft-04/schema#\",\n    \"type\": \"object\",\n    \"properties\": {\n        \"requestId\": {\n            \"type\": \"string\"\n        },\n        \"externalId\": {\n            \"type\": \"string\"\n        },\n        \"description\": {\n            \"type\": \"string\"\n        },\n        \"relatedParty\": {\n            \"type\": \"array\",\n            \"items\": {\n                \"type\": \"object\",\n                \"properties\": {\n                    \"role\": {\n                        \"type\": \"string\"\n                    },\n                    \"id\": {\n                        \"type\": \"string\"\n                    },\n                    \"name\": {\n                        \"type\": \"string\"\n                    }\n                }\n            }\n        },\n        \"bssCustomerRelatedParty\": {\n            \"type\": \"array\",\n            \"items\": {\n                \"type\": \"object\",\n                \"properties\": {\n                    \"personDetails\": {\n                        \"type\": \"object\",\n                        \"properties\": {\n                            \"firstName\": {\n                                \"type\": \"string\"\n                            },\n                            \"lastName\": {\n                                \"type\": \"string\"\n                            },\n                            \"prefix\": {\n                                \"type\": \"string\"\n                            },\n                            \"birthDate\": {\n                                \"type\": \"string\"\n                            },\n                            \"gender\": {\n                                \"type\": \"string\"\n                            },\n                            \"emailAddress\": {\n                                \"type\": \"string\"\n                            },\n                            \"phone\": {\n                                \"type\": \"string\"\n                            }\n                        }\n                    },\n                    \"iban\": {\n                        \"type\": \"string\"\n                    },\n                    \"bankAccountName\": {\n                        \"type\": \"string\"\n                    },\n                    \"usage\": {\n                        \"type\": \"string\"\n                    },\n                    \"commercialOffer\": {\n                        \"type\": \"string\"\n                    },\n                    \"id\": {\n                        \"type\": \"string\"\n                    },\n                    \"contactId\": {\n                        \"type\": \"string\"\n                    },\n                    \"crmAccountId\": {\n                        \"type\": \"string\"\n                    },\n                    \"customerCode\": {\n                        \"type\": \"string\"\n                    },\n                    \"creditCheckInfo\": {\n                        \"type\": \"object\",\n                        \"properties\": {\n                            \"authorizationScore\": {\n                                \"type\": \"string\"\n                            },\n                            \"authorizationResult\": {\n                                \"type\": \"string\"\n                            },\n                            \"isOverruled\": {\n                                \"type\": \"string\"\n                            }\n                        }\n                    }\n                }\n            }\n        },\n        \"discountRelatedParty\": {\n            \"type\": \"array\",\n            \"items\": {\n                \"type\": \"object\",\n                \"properties\": {\n                    \"id\": {\n                        \"type\": \"string\"\n                    },\n                    \"role\": {\n                        \"type\": \"string\"\n                    },\n                    \"variantCode\": {\n                        \"type\": \"string\"\n                    }\n                }\n            }\n        },\n        \"summarySentOnDate\": {\n            \"type\": \"object\",\n            \"properties\": {\n                \"summarySentOnDate\": {\n                    \"type\": \"string\"\n                }\n            }\n        },\n        \"orderItem\": {\n            \"type\": \"array\",\n            \"items\": {\n                \"type\": \"object\",\n                \"properties\": {\n                    \"id\": {\n                        \"type\": \"string\"\n                    },\n                    \"action\": {\n                        \"type\": \"string\"\n                    },\n                    \"service\": {\n                        \"type\": \"object\",\n                        \"properties\": {\n                            \"serviceCharacteristic\": {\n                                \"type\": \"array\",\n                                \"items\": {\n                                    \"type\": \"object\",\n                                    \"properties\": {\n                                        \"name\": {\n                                            \"type\": \"string\"\n                                        },\n                                        \"valueType\": {\n                                            \"type\": \"string\"\n                                        },\n                                        \"value\": {\n                                            \"type\": \"string\"\n                                        }\n                                    }\n                                }\n                            },\n                            \"place\": {\n                                \"type\": \"array\",\n                                \"items\": {\n                                    \"type\": \"object\",\n                                    \"properties\": {\n                                        \"role\": {\n                                            \"type\": \"string\"\n                                        },\n                                        \"id\": {\n                                            \"type\": \"string\"\n                                        },\n                                        \"alias\": {\n                                            \"type\": \"string\"\n                                        },\n                                        \"postcode\": {\n                                            \"type\": \"string\"\n                                        },\n                                        \"houseNumber\": {\n                                            \"type\": \"string\"\n                                        },\n                                        \"houseNumberExtension\": {\n                                            \"type\": \"string\"\n                                        },\n                                        \"street\": {\n                                            \"type\": \"string\"\n                                        },\n                                        \"city\": {\n                                            \"type\": \"string\"\n                                        },\n                                        \"country\": {\n                                            \"type\": \"string\"\n                                        },\n                                        \"type\": {\n                                            \"type\": \"string\"\n                                        }\n                                    }\n                                }\n                            },\n                            \"serviceSpecification\": {\n                                \"type\": \"object\",\n                                \"properties\": {\n                                    \"name\": {\n                                        \"type\": \"string\"\n                                    }\n                                }\n                            }\n                        }\n                    },\n                    \"orderItemRelationship\": {\n                        \"type\": \"array\",\n                        \"items\": {\n                            \"type\": \"object\",\n                            \"properties\": {\n                                \"type\": {\n                                    \"type\": \"string\"\n                                },\n                                \"id\": {\n                                    \"type\": \"string\"\n                                }\n                            }\n                        }\n                    }\n                }\n            }\n        }\n    }\n}"
     },
-    "FixedCustomerOrderCreate_Request": {
-      "type": "json",
-      "value": "{\n    \"$schema\": \"http://json-schema.org/draft-04/schema#\",\n    \"type\": \"object\",\n    \"properties\": {\n        \"requestId\": {\n            \"type\": \"string\"\n        },\n        \"externalId\": {\n            \"type\": \"string\"\n        },\n        \"description\": {\n            \"type\": \"string\"\n        },\n        \"relatedParty\": {\n            \"type\": \"array\",\n            \"items\": {\n                \"type\": \"object\",\n                \"properties\": {\n                    \"role\": {\n                        \"type\": \"string\"\n                    },\n                    \"id\": {\n                        \"type\": \"string\"\n                    },\n                    \"name\": {\n                        \"type\": \"string\"\n                    }\n                }\n            }\n        },\n        \"bssCustomerRelatedParty\": {\n            \"type\": \"array\",\n            \"items\": {\n                \"type\": \"object\",\n                \"properties\": {\n                    \"personDetails\": {\n                        \"type\": \"object\",\n                        \"properties\": {\n                            \"firstName\": {\n                                \"type\": \"string\"\n                            },\n                            \"lastName\": {\n                                \"type\": \"string\"\n                            },\n                            \"prefix\": {\n                                \"type\": \"string\"\n                            },\n                            \"birthDate\": {\n                                \"type\": \"string\"\n                            },\n                            \"gender\": {\n                                \"type\": \"string\"\n                            },\n                            \"emailAddress\": {\n                                \"type\": \"string\"\n                            },\n                            \"phone\": {\n                                \"type\": \"string\"\n                            }\n                        }\n                    },\n                    \"iban\": {\n                        \"type\": \"string\"\n                    },\n                    \"bankAccountName\": {\n                        \"type\": \"string\"\n                    },\n                    \"usage\": {\n                        \"type\": \"string\"\n                    },\n                    \"commercialOffer\": {\n                        \"type\": \"string\"\n                    },\n                    \"id\": {\n                        \"type\": \"string\"\n                    },\n                    \"creditCheckInfo\": {\n                        \"type\": \"object\",\n                        \"properties\": {\n                            \"authorizationScore\": {\n                                \"type\": \"string\"\n                            },\n                            \"authorizationResult\": {\n                                \"type\": \"string\"\n                            },\n                            \"isOverruled\": {\n                                \"type\": \"string\"\n                            },\n                            \"rejectReasons\": {\n                                \"type\": \"array\",\n                                \"items\": {\n                                    \"type\": \"object\",\n                                    \"properties\": {\n                                        \"code\": {\n                                            \"type\": \"string\"\n                                        },\n                                        \"description\": {\n                                            \"type\": \"string\"\n                                        }\n                                    }\n                                }\n                            }\n                        }\n                    }\n                }\n            }\n        },\n        \"discountRelatedParty\": {\n            \"type\": \"array\",\n            \"items\": {\n                \"type\": \"object\",\n                \"properties\": {\n                    \"id\": {\n                        \"type\": \"string\"\n                    },\n                    \"role\": {\n                        \"type\": \"string\"\n                    },\n                    \"variantCode\": {\n                        \"type\": \"string\"\n                    }\n                }\n            }\n        },\n        \"summarySentOnDate\": {\n            \"type\": \"object\",\n            \"properties\": {\n                \"summarySentOnDate\": {\n                    \"type\": \"string\"\n                }\n            }\n        },\n        \"orderItem\": {\n            \"type\": \"array\",\n            \"items\": {\n                \"type\": \"object\",\n                \"properties\": {\n                    \"id\": {\n                        \"type\": \"string\"\n                    },\n                    \"action\": {\n                        \"type\": \"string\"\n                    },\n                    \"service\": {\n                        \"type\": \"object\",\n                        \"properties\": {\n                            \"serviceCharacteristic\": {\n                                \"type\": \"array\",\n                                \"items\": {\n                                    \"type\": \"object\",\n                                    \"properties\": {\n                                        \"name\": {\n                                            \"type\": \"string\"\n                                        },\n                                        \"valueType\": {\n                                            \"type\": \"string\"\n                                        },\n                                        \"value\": {\n                                            \"type\": \"string\"\n                                        }\n                                    }\n                                }\n                            },\n                            \"place\": {\n                                \"type\": \"array\",\n                                \"items\": {\n                                    \"type\": \"object\",\n                                    \"properties\": {\n                                        \"role\": {\n                                            \"type\": \"string\"\n                                        },\n                                        \"id\": {\n                                            \"type\": \"string\"\n                                        },\n                                        \"alias\": {\n                                            \"type\": \"string\"\n                                        },\n                                        \"postcode\": {\n                                            \"type\": \"string\"\n                                        },\n                                        \"houseNumberExtension\": {\n                                            \"type\": \"string\"\n                                        },\n                                        \"street\": {\n                                            \"type\": \"string\"\n                                        },\n                                        \"city\": {\n                                            \"type\": \"string\"\n                                        },\n                                        \"country\": {\n                                            \"type\": \"string\"\n                                        },\n                                        \"type\": {\n                                            \"type\": \"string\"\n                                        }\n                                    }\n                                }\n                            },\n                            \"serviceSpecification\": {\n                                \"type\": \"object\",\n                                \"properties\": {\n                                    \"name\": {\n                                        \"type\": \"string\"\n                                    }\n                                }\n                            }\n                        }\n                    },\n                    \"orderItemRelationship\": {\n                        \"type\": \"array\",\n                        \"items\": {\n                            \"type\": \"object\",\n                            \"properties\": {\n                                \"type\": {\n                                    \"type\": \"string\"\n                                },\n                                \"id\": {\n                                    \"type\": \"string\"\n                                }\n                            }\n                        }\n                    }\n                }\n            }\n        }\n    }\n}",
-      "fe_metadata": "{\n    \"$schema\": \"http://json-schema.org/draft-04/schema#\",\n    \"type\": \"object\",\n    \"properties\": {\n        \"requestId\": {\n            \"type\": \"string\"\n        },\n        \"externalId\": {\n            \"type\": \"string\"\n        },\n        \"description\": {\n            \"type\": \"string\"\n        },\n        \"relatedParty\": {\n            \"type\": \"array\",\n            \"items\": {\n                \"type\": \"object\",\n                \"properties\": {\n                    \"role\": {\n                        \"type\": \"string\"\n                    },\n                    \"id\": {\n                        \"type\": \"string\"\n                    },\n                    \"name\": {\n                        \"type\": \"string\"\n                    }\n                }\n            }\n        },\n        \"bssCustomerRelatedParty\": {\n            \"type\": \"array\",\n            \"items\": {\n                \"type\": \"object\",\n                \"properties\": {\n                    \"personDetails\": {\n                        \"type\": \"object\",\n                        \"properties\": {\n                            \"firstName\": {\n                                \"type\": \"string\"\n                            },\n                            \"lastName\": {\n                                \"type\": \"string\"\n                            },\n                            \"prefix\": {\n                                \"type\": \"string\"\n                            },\n                            \"birthDate\": {\n                                \"type\": \"string\"\n                            },\n                            \"gender\": {\n                                \"type\": \"string\"\n                            },\n                            \"emailAddress\": {\n                                \"type\": \"string\"\n                            },\n                            \"phone\": {\n                                \"type\": \"string\"\n                            }\n                        }\n                    },\n                    \"iban\": {\n                        \"type\": \"string\"\n                    },\n                    \"bankAccountName\": {\n                        \"type\": \"string\"\n                    },\n                    \"usage\": {\n                        \"type\": \"string\"\n                    },\n                    \"commercialOffer\": {\n                        \"type\": \"string\"\n                    },\n                    \"id\": {\n                        \"type\": \"string\"\n                    },\n                    \"creditCheckInfo\": {\n                        \"type\": \"object\",\n                        \"properties\": {\n                            \"authorizationScore\": {\n                                \"type\": \"string\"\n                            },\n                            \"authorizationResult\": {\n                                \"type\": \"string\"\n                            },\n                            \"isOverruled\": {\n                                \"type\": \"string\"\n                            },\n                            \"rejectReasons\": {\n                                \"type\": \"array\",\n                                \"items\": {\n                                    \"type\": \"object\",\n                                    \"properties\": {\n                                        \"code\": {\n                                            \"type\": \"string\"\n                                        },\n                                        \"description\": {\n                                            \"type\": \"string\"\n                                        }\n                                    }\n                                }\n                            }\n                        }\n                    }\n                }\n            }\n        },\n        \"discountRelatedParty\": {\n            \"type\": \"array\",\n            \"items\": {\n                \"type\": \"object\",\n                \"properties\": {\n                    \"id\": {\n                        \"type\": \"string\"\n                    },\n                    \"role\": {\n                        \"type\": \"string\"\n                    },\n                    \"variantCode\": {\n                        \"type\": \"string\"\n                    }\n                }\n            }\n        },\n        \"summarySentOnDate\": {\n            \"type\": \"object\",\n            \"properties\": {\n                \"summarySentOnDate\": {\n                    \"type\": \"string\"\n                }\n            }\n        },\n        \"orderItem\": {\n            \"type\": \"array\",\n            \"items\": {\n                \"type\": \"object\",\n                \"properties\": {\n                    \"id\": {\n                        \"type\": \"string\"\n                    },\n                    \"action\": {\n                        \"type\": \"string\"\n                    },\n                    \"service\": {\n                        \"type\": \"object\",\n                        \"properties\": {\n                            \"serviceCharacteristic\": {\n                                \"type\": \"array\",\n                                \"items\": {\n                                    \"type\": \"object\",\n                                    \"properties\": {\n                                        \"name\": {\n                                            \"type\": \"string\"\n                                        },\n                                        \"valueType\": {\n                                            \"type\": \"string\"\n                                        },\n                                        \"value\": {\n                                            \"type\": \"string\"\n                                        }\n                                    }\n                                }\n                            },\n                            \"place\": {\n                                \"type\": \"array\",\n                                \"items\": {\n                                    \"type\": \"object\",\n                                    \"properties\": {\n                                        \"role\": {\n                                            \"type\": \"string\"\n                                        },\n                                        \"id\": {\n                                            \"type\": \"string\"\n                                        },\n                                        \"alias\": {\n                                            \"type\": \"string\"\n                                        },\n                                        \"postcode\": {\n                                            \"type\": \"string\"\n                                        },\n                                        \"houseNumberExtension\": {\n                                            \"type\": \"string\"\n                                        },\n                                        \"street\": {\n                                            \"type\": \"string\"\n                                        },\n                                        \"city\": {\n                                            \"type\": \"string\"\n                                        },\n                                        \"country\": {\n                                            \"type\": \"string\"\n                                        },\n                                        \"type\": {\n                                            \"type\": \"string\"\n                                        }\n                                    }\n                                }\n                            },\n                            \"serviceSpecification\": {\n                                \"type\": \"object\",\n                                \"properties\": {\n                                    \"name\": {\n                                        \"type\": \"string\"\n                                    }\n                                }\n                            }\n                        }\n                    },\n                    \"orderItemRelationship\": {\n                        \"type\": \"array\",\n                        \"items\": {\n                            \"type\": \"object\",\n                            \"properties\": {\n                                \"type\": {\n                                    \"type\": \"string\"\n                                },\n                                \"id\": {\n                                    \"type\": \"string\"\n                                }\n                            }\n                        }\n                    }\n                }\n            }\n        }\n    }\n}"
-    },
     "FixedCustomerOrderMove_Request": {
       "type": "json",
       "value": "{\n    \"$schema\": \"http://json-schema.org/draft-04/schema#\",\n    \"type\": \"object\",\n    \"properties\": {\n        \"requestId\": {\n            \"type\": \"string\"\n        },\n        \"externalId\": {\n            \"type\": \"string\"\n        },\n        \"description\": {\n            \"type\": \"string\"\n        },\n        \"relatedParty\": {\n            \"type\": \"array\",\n            \"items\": {\n                \"type\": \"object\",\n                \"properties\": {\n                    \"role\": {\n                        \"type\": \"string\"\n                    },\n                    \"id\": {\n                        \"type\": \"string\"\n                    },\n                    \"name\": {\n                        \"type\": \"string\"\n                    }\n                }\n            }\n        },\n        \"bssCustomerRelatedParty\": {\n            \"type\": \"array\",\n            \"items\": {\n                \"type\": \"object\",\n                \"properties\": {\n                    \"personDetails\": {\n                        \"type\": \"object\",\n                        \"properties\": {\n                            \"firstName\": {\n                                \"type\": \"string\"\n                            },\n                            \"lastName\": {\n                                \"type\": \"string\"\n                            },\n                            \"prefix\": {\n                                \"type\": \"string\"\n                            },\n                            \"birthDate\": {\n                                \"type\": \"string\"\n                            },\n                            \"gender\": {\n                                \"type\": \"string\"\n                            },\n                            \"emailAddress\": {\n                                \"type\": \"string\"\n                            },\n                            \"phone\": {\n                                \"type\": \"string\"\n                            }\n                        }\n                    },\n                    \"iban\": {\n                        \"type\": \"string\"\n                    },\n                    \"bankAccountName\": {\n                        \"type\": \"string\"\n                    },\n                    \"usage\": {\n                        \"type\": \"string\"\n                    },\n                    \"commercialOffer\": {\n                        \"type\": \"string\"\n                    },\n                    \"crmAccountId\": {\n                        \"type\": \"string\"\n                    },\n                    \"id\": {\n                        \"type\": \"string\"\n                    }\n                }\n            }\n        },\n        \"discountRelatedParty\": {\n            \"type\": \"array\",\n            \"items\": {\n                \"type\": \"object\",\n                \"properties\": {\n                    \"id\": {\n                        \"type\": \"string\"\n                    },\n                    \"role\": {\n                        \"type\": \"string\"\n                    },\n                    \"variantCode\": {\n                        \"type\": \"string\"\n                    }\n                }\n            }\n        },\n        \"summarySentOnDate\": {\n            \"type\": \"object\",\n            \"properties\": {\n                \"summarySentOnDate\": {\n                    \"type\": \"string\"\n                }\n            }\n        },\n        \"serviceOrderItem\": {\n            \"type\": \"array\",\n            \"items\": {\n                \"type\": \"object\",\n                \"properties\": {\n                    \"id\": {\n                        \"type\": \"string\"\n                    },\n                    \"action\": {\n                        \"type\": \"string\"\n                    },\n                    \"quantity\": {\n                        \"type\": \"string\"\n                    },\n                    \"service\": {\n                        \"type\": \"object\",\n                        \"properties\": {\n                            \"serviceCharacteristic\": {\n                                \"type\": \"array\",\n                                \"items\": {\n                                    \"type\": \"object\",\n                                    \"properties\": {\n                                        \"name\": {\n                                            \"type\": \"string\"\n                                        },\n                                        \"valueType\": {\n                                            \"type\": \"string\"\n                                        },\n                                        \"value\": {\n                                            \"type\": \"string\"\n                                        }\n                                    }\n                                }\n                            },\n                            \"place\": {\n                                \"type\": \"array\",\n                                \"items\": {\n                                    \"type\": \"object\",\n                                    \"properties\": {\n                                        \"role\": {\n                                            \"type\": \"string\"\n                                        },\n                                        \"id\": {\n                                            \"type\": \"string\"\n                                        },\n                                        \"alias\": {\n                                            \"type\": \"string\"\n                                        },\n                                        \"postcode\": {\n                                            \"type\": \"string\"\n                                        },\n                                        \"houseNumber\": {\n                                            \"type\": \"string\"\n                                        },\n                                        \"houseNumberExtension\": {\n                                            \"type\": \"string\"\n                                        },\n                                        \"street\": {\n                                            \"type\": \"string\"\n                                        },\n                                        \"city\": {\n                                            \"type\": \"string\"\n                                        },\n                                        \"country\": {\n                                            \"type\": \"string\"\n                                        },\n                                        \"type\": {\n                                            \"type\": \"string\"\n                                        }\n                                    }\n                                }\n                            },\n                            \"serviceSpecification\": {\n                                \"type\": \"object\",\n                                \"properties\": {\n                                    \"id\": {\n                                        \"type\": \"string\"\n                                    },\n                                    \"name\": {\n                                        \"type\": \"string\"\n                                    },\n                                    \"version\": {\n                                        \"type\": \"string\"\n                                    }\n                                }\n                            }\n                        }\n                    },\n                    \"serviceOrderItemRelationship\": {\n                        \"type\": \"object\",\n                        \"properties\": {\n                            \"relationshipType\": {\n                                \"type\": \"string\"\n                            },\n                            \"orderItem\": {\n                                \"type\": \"object\",\n                                \"properties\": {\n                                    \"itemId\": {\n                                        \"type\": \"string\"\n                                    }\n                                }\n                            }\n                        }\n                    }\n                }\n            }\n        }\n    }\n}",
@@ -1538,7 +1633,7 @@
     "endpoints": [
       {
         "protocol": "http",
-        "port": "5001",
+        "port": "9999",
         "spec": {
           "name": "FixedCustomerOrderCancel",
           "version": "1.0.0"
@@ -1554,7 +1649,7 @@
           "paths": {
             "/FixedCustomerOrderCancel_2": {
               "post": {
-                "summary": "FixedCustomerOrderCancel_HTTPRequest",
+                "summary": "FixedCustomerOrderCancel",
                 "operationId": "post_FixedCustomerOrderCancel_2",
                 "parameters": [
                   {

@@ -1,0 +1,26 @@
+{
+  "suites": {
+    "Testsuite_1": {
+      "id": "Testsuite_1",
+      "name": "Testsuite_1",
+      "disabled": false,
+      "tests": [
+        "FixedCustomerOrderCancel:Success"
+      ]
+    }
+  },
+  "tests": {
+    "FixedCustomerOrderCancel:Success": {
+      "name": "Success",
+      "flowId": "flow:FixedCustomerOrderCancel",
+      "flowName": "FixedCustomerOrderCancel",
+      "disabled": false
+    }
+  },
+  "type": "flogo:unittest",
+  "model": "1.1.1",
+  "app": {
+    "name": "FixedCustomerOrderCancel",
+    "version": "1.0.0"
+  }
+}
