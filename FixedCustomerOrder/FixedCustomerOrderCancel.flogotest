@@ -5,16 +5,41 @@
       "name": "Testsuite_1",
       "disabled": false,
       "tests": [
-        "FixedCustomerOrderCancel:Success"
+        "FixedCustomerOrderCancel:Success_200",
+        "FixedCustomerOrderCancel:Error"
       ]
     }
   },
   "tests": {
-    "FixedCustomerOrderCancel:Success": {
-      "name": "Success",
+    "FixedCustomerOrderCancel:Success_200": {
+      "name": "Success_200",
       "flowId": "flow:FixedCustomerOrderCancel",
       "flowName": "FixedCustomerOrderCancel",
-      "disabled": false
+      "disabled": false,
+      "flowOutputs": {
+        "type": "ASSERT_ON_OP",
+        "assertions": {
+          "Assertion1": {
+            "name": "Assertion1",
+            "valueAssertion": "isDefined($flow.code)"
+          }
+        }
+      }
+    },
+    "FixedCustomerOrderCancel:Error": {
+      "name": "Error",
+      "flowId": "flow:FixedCustomerOrderCancel",
+      "flowName": "FixedCustomerOrderCancel",
+      "disabled": false,
+      "flowOutputs": {
+        "type": "ASSERT_ON_ERR",
+        "assertions": {
+          "Assertion1": {
+            "name": "Assertion1",
+            "valueAssertion": "string.contains($error.message,\"path not found\")"
+          }
+        }
+      }
     }
   },
   "type": "flogo:unittest",
