@@ -181,7 +181,7 @@ jobs:
               target_dataplane: 'dev'
       fail-fast: false
       max-parallel: 5
-    uses: ODIDO-Enterprise-Integration/flogo-ci/main/.github/workflows/deploy.yaml@main
+    uses: ODIDO-Enterprise-Integration/flogo-ci/.github/workflows/deploy.yaml@main
     with:
       flogo-filepath: ${{ matrix.flogo.flogo_filepath }}
       application-name: ${{ matrix.flogo.application_name }}
