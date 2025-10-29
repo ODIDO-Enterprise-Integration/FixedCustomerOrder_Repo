@@ -1,0 +1,191 @@
+name: Trigger Flogo Builds for Changed Files
+
+permissions:
+  id-token: write
+  contents: read
+  pull-requests: read
+  actions: read
+
+on:
+  pull_request:
+    branches: [main]
+
+jobs:
+  detect-flogo-changes:
+    runs-on: ubuntu-latest
+    outputs:
+      flogo-matrix: ${{ steps.prepare-matrix.outputs.flogo-matrix }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Detect changed files (.flogo only)
+        id: changed-files
+        uses: tj-actions/changed-files@v45
+        with:
+          files: |
+            **/*.flogo
+            **/*.flogotest
+
+      - name: Validate matching .flogotest and prepare matrix JSON
+        id: prepare-matrix
+        shell: bash
+        run: |
+          files="${{ steps.changed-files.outputs.all_changed_files }}"
+          
+          if [[ -z "$files" ]]; then
+            echo "No .flogo or .flogotest files changed. Skipping validation and matrix preparation."
+            echo "flogo-matrix=[]" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+          echo "Detected changed .flogo files: $files"
+          
+          IFS=' ' read -r -a files_array <<< "$files"
+          
+          
+          # We'll track all .flogo files related to changes (either .flogo or .flogotest changed)
+          declare -A flogo_files=()
+          
+          for file in "${files_array[@]}"; do
+            if [[ "$file" == *.flogo ]]; then
+              flogo_files["$file"]=1
+            elif [[ "$file" == *.flogotest ]]; then
+              # map back to .flogo file by replacing .flogotest with .flogo
+              corresponding_flogo="${file%.flogotest}.flogo"
+              if [[ -f "$corresponding_flogo" ]]; then
+                flogo_files["$corresponding_flogo"]=1
+              else
+                echo "::error ::Detected changed .flogotest file $file but no matching .flogo file $corresponding_flogo found."
+                exit 1
+              fi
+            fi
+          done
+          
+          matrix_items=()
+          environments=("dev" "agile")
+          
+          for flogo_file in "${!flogo_files[@]}"; do
+            flogotest_file="${flogo_file%.flogo}.flogotest"
+            if [[ ! -f "$flogotest_file" ]]; then
+              echo "::error ::Missing matching .flogotest file for $flogo_file"
+              exit 1
+            fi
+            
+            # Validate trigger and endpoint ports are 9999
+            invalid_trigger_ports=$(jq -r '.triggers[]?.settings.port // empty' "$flogo_file" | grep -v '^9999$' || true)
+            invalid_endpoint_ports=$(jq -r '.endpoints[]?.port // empty' "$flogo_file" | grep -v '^9999$' || true)
+
+            if [[ -n "$invalid_trigger_ports" || -n "$invalid_endpoint_ports" ]]; then
+              echo "::error ::Invalid port detected in $flogo_file. Only port 9999 is allowed."
+              echo "Invalid trigger ports:"
+              echo "$invalid_trigger_ports"
+              echo "Invalid endpoint ports:"
+              echo "$invalid_endpoint_ports"
+              exit 1
+            fi
+            
+            # Check if the REST trigger import is present, then require a -oas.json file
+            if jq -r '.imports[]? // empty' "$flogo_file" | grep -q '^.*github\.com/tibco/flogo-general/src/app/General/trigger/rest$'; then
+              oas_file="${flogo_file%.flogo}-oas.json"
+              if [[ ! -f "$oas_file" ]]; then
+                echo "::error ::Missing required OAS file: $oas_file for REST trigger import in $flogo_file"
+                exit 1
+              fi
+            fi
+            
+            # Check for required <env>-props.env files if "properties" array is non-empty
+            has_properties=$(jq '.properties | length > 0' "$flogo_file")
+
+            if [[ "$has_properties" == "true" ]]; then
+              # also check for prod, though it's not in the matrix
+              for env in "${environments[@]}" "prod"; do
+                props_file="${flogo_file%.flogo}-${env}-props.env"
+                if [[ ! -f "$props_file" ]]; then
+                  echo "::error ::Missing required properties file: $props_file for $env environment in $flogo_file"
+                  exit 1
+                fi
+              done
+            fi
+
+            # Parse .flogo file
+            name=$(jq -r '.name' "$flogo_file")
+            version=$(jq -r '.version' "$flogo_file")
+            oracle_import=$(jq -r '.imports[]?' "$flogo_file" | grep -i 'oracle' || echo "")
+            preinstall=""
+            if [[ -n "$oracle_import" ]]; then
+              preinstall="oracle"
+            fi
+
+            # Expand for each environment
+            for env in "${environments[@]}"; do
+              item=$(jq -n \
+                --arg fp "$flogo_file" \
+                --arg tfp "$flogotest_file" \
+                --arg name "$name" \
+                --arg version "$version" \
+                --arg preinstall "$preinstall" \
+                --arg env "$env" \
+                '{
+                  flogo_filepath: $fp,
+                  flogo_test_filepath: $tfp,
+                  application_name: $name,
+                  version: $version,
+                  pre_install: $preinstall,
+                  target_dataplane: $env
+                }')
+              matrix_items+=("$item")
+            done
+          done
+
+          if [ ${#matrix_items[@]} -eq 0 ]; then
+            echo "flogo-matrix=[]" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+
+          full_matrix=$(printf '%s\n' "${matrix_items[@]}" | jq -cs .)
+          echo "Flogo matrix: $full_matrix"
+          echo "flogo-matrix=$full_matrix" >> $GITHUB_OUTPUT
+
+  build-and-publish-dev:
+    needs: [detect-flogo-changes]
+    if: needs.detect-flogo-changes.outputs.flogo-matrix != '[]'
+    strategy:
+      matrix:
+        flogo: ${{ fromJson(needs.detect-flogo-changes.outputs.flogo-matrix) }}
+        exclude:
+          - flogo:
+              target_dataplane: agile
+          - flogo:
+              target_dataplane: staging
+    uses: ODIDO-Enterprise-Integration/flogo-ci/.github/workflows/build.yaml@main
+    with:
+      flogo-filepath: ${{ matrix.flogo.flogo_filepath }}
+      flogo-test-filepath: ${{ matrix.flogo.flogo_test_filepath }}
+      pre-install: ${{ matrix.flogo.pre_install }}
+      application-name: ${{ matrix.flogo.application_name }}
+      target-dataplane: ${{ matrix.flogo.target_dataplane }}
+      target-ecr-repo: '087264746030.dkr.ecr.eu-central-1.amazonaws.com/ei/flogo-${{ matrix.flogo.application_name }}'
+      version: ${{ matrix.flogo.version }}
+    secrets: inherit
+
+  publish-others:
+    needs: [detect-flogo-changes, build-and-publish-dev]
+    if: needs.detect-flogo-changes.outputs.flogo-matrix != '[]'
+    strategy:
+      matrix:
+        flogo: ${{ fromJson(needs.detect-flogo-changes.outputs.flogo-matrix) }}
+        exclude:
+          - flogo:
+              target_dataplane: 'dev'
+      fail-fast: false
+      max-parallel: 5
+    uses: ODIDO-Enterprise-Integration/flogo-ci/.github/workflows/deploy.yaml@main
+    with:
+      flogo-filepath: ${{ matrix.flogo.flogo_filepath }}
+      application-name: ${{ matrix.flogo.application_name }}
+      version: ${{ matrix.flogo.version }}
+      target-dataplane: ${{ matrix.flogo.target_dataplane }}
+      target-ecr-repo: '087264746030.dkr.ecr.eu-central-1.amazonaws.com/ei/flogo-${{ matrix.flogo.application_name }}'
+    secrets: inherit
