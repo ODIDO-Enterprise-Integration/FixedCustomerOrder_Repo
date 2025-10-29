@@ -1,0 +1,108 @@
+name: Trigger Deploy for Changed Props or OAS Files
+
+permissions:
+  id-token: write
+  contents: read
+  pull-requests: read
+  actions: read
+
+on:
+  pull_request:
+    branches: [main]
+
+jobs:
+  detect-props-oas-changes:
+    runs-on: ubuntu-latest
+    outputs:
+      deploy-matrix: ${{ steps.prepare-matrix.outputs.deploy-matrix }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Detect changed files (*-props.env or *-oas.json only)
+        id: changed-files
+        uses: tj-actions/changed-files@v45
+        with:
+          files: |
+            **/*-props.env
+            **/*-oas.json
+
+      - name: Prepare deploy matrix JSON
+        id: prepare-matrix
+        shell: bash
+        run: |
+          files="${{ steps.changed-files.outputs.all_changed_files }}"
+          
+          if [[ -z "$files" ]]; then
+            echo "No *-props.env or *-oas.json files changed. Skipping matrix preparation."
+            echo "deploy-matrix=[]" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+          echo "Detected changed props or oas files: $files"
+          
+          IFS=' ' read -r -a changed_files <<< "$files"
+          matrix_items=()
+
+          for changed_file in "${changed_files[@]}"; do
+            # Determine the base .flogo file corresponding to this changed file:
+            # *-props.env or *-oas.json corresponds to <basename>.flogo
+            base_name=$(echo "$changed_file" | sed -E 's/-[^/]+-props\.env$/.flogo/; s/-oas\.json$/.flogo/')
+
+            if [[ ! -f "$base_name" ]]; then
+              echo "::warning ::No matching .flogo file found for $changed_file (expected $base_name). Skipping."
+              continue
+            fi
+
+            # Extract application_name and version from the .flogo file
+            name=$(jq -r '.name' "$base_name")
+            version=$(jq -r '.version' "$base_name")
+
+            environments=("dev" "agile")
+            if [[ "$changed_file" == *-props.env ]]; then
+              env=$(basename "$changed_file" | sed -E 's/^.+-([^-]+)-props\.env$/\1/')
+              environments=("$env")
+            fi
+
+            for env in "${environments[@]}"; do
+              item=$(jq -n \
+                --arg fp "$base_name" \
+                --arg name "$name" \
+                --arg version "$version" \
+                --arg env "$env" \
+                '{
+                  flogo_filepath: $fp,
+                  application_name: $name,
+                  version: $version,
+                  target_dataplane: $env
+                }')
+              matrix_items+=("$item")
+            done
+          done
+
+          if [ ${#matrix_items[@]} -eq 0 ]; then
+            echo "deploy-matrix=[]" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+
+          full_matrix=$(printf '%s\n' "${matrix_items[@]}" | jq -cs .)
+          echo "Deploy matrix: $full_matrix"
+          echo "deploy-matrix=$full_matrix" >> $GITHUB_OUTPUT
+
+  deploy-changed:
+    needs: detect-props-oas-changes
+    if: needs.detect-props-oas-changes.outputs.deploy-matrix != '[]'
+    strategy:
+      matrix:
+        flogo: ${{ fromJson(needs.detect-props-oas-changes.outputs.deploy-matrix) }}
+      fail-fast: false
+      max-parallel: 5
+    uses: ODIDO-Enterprise-Integration/flogo-ci/.github/workflows/deploy.yaml@main
+    with:
+      flogo-filepath: ${{ matrix.flogo.flogo_filepath }}
+      application-name: ${{ matrix.flogo.application_name }}
+      version: ${{ matrix.flogo.version }}
+      target-dataplane: ${{ matrix.flogo.target_dataplane }}
+      target-ecr-repo: '087264746030.dkr.ecr.eu-central-1.amazonaws.com/ei/flogo-${{ matrix.flogo.application_name }}'
+    secrets: inherit
