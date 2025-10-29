@@ -1,0 +1,58 @@
+name: Manual Deploy Flogo to ENV
+
+on:
+  workflow_dispatch:
+    inputs:
+      flogo-filepath:
+        description: 'Path to the .flogo file (relative to repo root)'
+        required: true
+        type: string
+      environment:
+        description: 'the envirionment to which to deploy'
+        required: true
+        type: string
+
+jobs:
+  parse:
+    runs-on: ubuntu-latest
+    outputs:
+      name: ${{ steps.parse_flogo.outputs.name }}
+      version: ${{ steps.parse_flogo.outputs.version }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Parse .flogo for name and version
+        id: parse_flogo
+        run: |
+          flogo_file="${{ inputs.flogo-filepath }}"
+          name=$(jq -r '.name' "$flogo_file")
+          version=$(jq -r '.version' "$flogo_file")
+
+          if [[ -z "$name" || "$name" == "null" ]]; then
+            echo "::error ::Failed to parse name from $flogo_file"
+            exit 1
+          fi
+          if [[ -z "$version" || "$version" == "null" ]]; then
+            echo "::error ::Failed to parse version from $flogo_file"
+            exit 1
+          fi
+
+          echo "Parsed name: $name"
+          echo "Parsed version: $version"
+
+          echo "::set-output name=name::$name"
+          echo "::set-output name=version::$version"
+
+  deploy:
+    needs: parse
+    uses: ODIDO-Enterprise-Integration/flogo-ci/.github/workflows/deploy.yaml@main
+    with:
+      flogo-filepath: ${{ inputs.flogo-filepath }}
+      application-name: ${{ needs.parse.outputs.name }}
+      version: ${{ needs.parse.outputs.version }}
+      target-ecr-repo: '087264746030.dkr.ecr.eu-central-1.amazonaws.com/ei/flogo- ${{ needs.parse.outputs.name }}'
+      target-dataplane: ${{ inputs.environment }}
+    secrets: inherit
